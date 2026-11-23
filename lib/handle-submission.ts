@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { z, type ZodType } from "zod";
-import type { Model } from "mongoose";
-import { connectDB } from "./mongodb";
 import { rateLimit } from "./rate-limit";
+import { sendFormNotification } from "./mailer";
 
 type Json = { ok: boolean; message?: string; errors?: Record<string, string[]> };
 
@@ -16,15 +15,12 @@ function clientIp(req: Request) {
 
 /**
  * Shared handler for every public form endpoint:
- * rate limit → parse JSON → zod validate → honeypot → duplicate check → persist.
+ * rate limit → parse JSON → zod validate → honeypot → email the entry to the team.
  */
 export async function handleSubmission<T extends { hp?: string }>(
   req: Request,
   schema: ZodType<T>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  model: Model<any>,
-  dedupeKeys: (d: T) => Record<string, unknown>,
-  duplicateMessage = "We already received your request recently. Our team will be in touch.",
+  formName: string,
 ) {
   const path = new URL(req.url).pathname;
   if (!rateLimit(`${path}:${clientIp(req)}`)) {
@@ -51,15 +47,10 @@ export async function handleSubmission<T extends { hp?: string }>(
   const { hp, ...data } = parsed.data;
   if (hp) return json({ ok: true }); // bot: pretend success, store nothing
 
-  try {
-    await connectDB();
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const dup = await model.exists({ ...dedupeKeys(parsed.data), createdAt: { $gte: since } });
-    if (dup) return json({ ok: false, message: duplicateMessage }, 409);
-    await model.create(data);
-    return json({ ok: true }, 201);
-  } catch (e) {
-    console.error(`[${path}] submission failed`, e);
+  const sent = await sendFormNotification(formName, data as Record<string, unknown>);
+  if (!sent) {
+    console.error(`[${path}] submission could not be emailed`);
     return json({ ok: false, message: "Something went wrong on our side. Please try again in a moment." }, 500);
   }
+  return json({ ok: true }, 201);
 }
