@@ -7,6 +7,11 @@ export const SITE = {
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
 };
 
+export const SOCIAL_LINKS = {
+  instagram: "https://www.instagram.com/madhulika.mishra.dwivedi",
+  linkedin: "https://www.linkedin.com/in/madhulika-dwivedi-355241122",
+} as const;
+
 export const NAV = [
   { label: "Home", href: "/" },
   { label: "Employers", href: "/for-employers" },
