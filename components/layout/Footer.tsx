@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import { FOOTER_NAV, FOOTER_SERVICES } from "@/lib/site";
+import { Instagram, Linkedin } from "@/components/ui/BrandIcons";
+import { FOOTER_NAV, FOOTER_SERVICES, SOCIAL_LINKS } from "@/lib/site";
 
 const SOCIALS = [
-  { label: "in", name: "LinkedIn" },
-  { label: "f", name: "Facebook" },
-  { label: "x", name: "X" },
-  { label: "ig", name: "Instagram" },
+  { name: "LinkedIn", href: SOCIAL_LINKS.linkedin, Icon: Linkedin },
+  { name: "Instagram", href: SOCIAL_LINKS.instagram, Icon: Instagram },
 ];
 
 export function Footer() {
@@ -26,18 +25,20 @@ export function Footer() {
               {"Career support and recruitment assistance\nfor students, professionals and growing\nbusinesses."}
             </p>
             <div className="mt-[34px] flex gap-3">
-              {SOCIALS.map((s) => (
-                <span
-                  key={s.name}
-                  title={`${s.name} (coming soon)`}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border-[1.5px] border-fog-2 font-display text-[13px] font-bold"
-                  aria-label={s.name}
+              {SOCIALS.map(({ name, href, Icon }) => (
+                <a
+                  key={name}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`SmartMovess on ${name}`}
+                  title={name}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border-[1.5px] border-fog-2 transition-colors hover:border-white hover:text-white"
                 >
-                  {s.label}
-                </span>
+                  <Icon size={17} strokeWidth={2} aria-hidden />
+                </a>
               ))}
             </div>
-            <p className="mt-[11px] text-[12px] leading-[15px]">Social media links (placeholders)</p>
           </div>
 
           <div>
