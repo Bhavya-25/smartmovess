@@ -2,25 +2,26 @@
 
 Recruitment and career-consulting website built from the SmartMovess Figma design.
 
-**Stack:** Next.js (App Router) · TypeScript · React · Tailwind CSS v4 · MongoDB + Mongoose · Zod · Lucide icons.
+**Stack:** Next.js (App Router) · TypeScript · React · Tailwind CSS v4 · Nodemailer (SMTP) · Zod · Lucide icons.
 No Docker, no Redux, no extra services.
 
 ## Run locally
 
 ```bash
 npm install
-cp .env.example .env.local      # then edit MONGODB_URI if needed
+cp .env.example .env.local      # then fill in the SMTP_* values
 npm run dev                     # http://localhost:3000
 ```
 
-You need a MongoDB instance. Either:
-
-- **Local:** `mongod` listening on `127.0.0.1:27017` (the default in `.env.example`), or
-- **Atlas:** create a free cluster, allow your IP, and put its connection string in `MONGODB_URI`.
+Form entries are not stored in a database: each submission is emailed to `NOTIFY_EMAIL`
+(default `info@smartmovess.co.in`) with the form name in the subject. SMTP must be configured.
 
 | Variable | Purpose |
 | --- | --- |
-| `MONGODB_URI` | MongoDB connection string (server-side only, never sent to the browser) |
+| `SMTP_HOST` / `SMTP_PORT` | Mail server (e.g. `smtp.gmail.com` / `465`) |
+| `SMTP_USER` / `SMTP_PASS` | Mailbox login (for Gmail/Google Workspace use an App Password) |
+| `MAIL_FROM` | Sender shown on the notification email |
+| `NOTIFY_EMAIL` | Where entries are delivered |
 | `NEXT_PUBLIC_SITE_URL` | Public URL, used for sitemap, canonical URLs and Open Graph |
 
 ## Scripts
@@ -32,7 +33,7 @@ You need a MongoDB instance. Either:
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint |
 | `npm test` | Vitest unit tests (validation schemas) |
-| `npm run test:e2e` | Playwright journeys on desktop (1440) and mobile (390). Needs MongoDB running; **submits real records** using `@example.com` addresses |
+| `npm run test:e2e` | Playwright journeys on desktop (1440) and mobile (390). Needs SMTP configured; **sends real emails** using `@example.com` addresses |
 
 ## Pages
 
@@ -79,8 +80,7 @@ components/sections/     Hero, shared cards/steps/banners, FAQ, page-specific vi
 components/forms/        field primitives, useForm hook, the five forms
 components/modals/       Modal (bottom sheet on mobile) + provider
 components/ui/           Button, Logo, section primitives, icons
-lib/                     site content, zod schemas, mongodb connection, submission handler
-models/                  Mongoose models
+lib/                     site content, zod schemas, mailer, submission handler
 tests/                   unit (Vitest) and e2e (Playwright)
 public/images/           photography exported from Figma
 ```
@@ -89,8 +89,8 @@ public/images/           photography exported from Figma
 
 The app is a standard Next.js app and deploys to Vercel or any Node host.
 
-1. Create a MongoDB Atlas cluster (or any hosted MongoDB) and copy the connection string.
-2. Set `MONGODB_URI` and `NEXT_PUBLIC_SITE_URL` in the host's environment settings.
+1. In the host's environment settings set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, `NOTIFY_EMAIL` and `NEXT_PUBLIC_SITE_URL`.
+2. Redeploy after changing environment variables.
 3. Build with `npm run build`, start with `npm start` (Vercel does this automatically).
 
 Notes: `next/font` downloads Manrope and Inter at build time, so the build machine needs internet access. The rate limiter is in-memory per server instance; if you scale out or run serverless at high volume, back it with a shared store (e.g. Redis/Upstash).
